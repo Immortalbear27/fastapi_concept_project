@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status
 from app.models.schemas import ThreatRequest, ThreatResponse
 from app.dependencies.auth import get_current_user
 from app.analysis.threat_analysis import analyse_threat, cpu_intensive_fingerprint
+from app.utils.decorators import timed
 from concurrent.futures import ThreadPoolExecutor
 import asyncio
 
@@ -29,6 +30,8 @@ router = APIRouter(
 # NOTE for above: router = APIRouter(prefix="/threat") effectively translates to:
 # 'Everything in this file belongs under /threat/*'
 
+
+
 # Declares HTTP method, path, response schema and status code:
 # NOTE: This is also the use of a decorator in action.
 @router.post(
@@ -45,6 +48,9 @@ router = APIRouter(
 # also has these key properties:
 # - Records the function reference, attaches metadata such as HTTP method, path,
 # input and output model, and status code
+
+# Decorator that measures the time of execution:
+@timed("threat_analyze")
 
 async def analyse_threat_endpoint(
     # The below line does this:

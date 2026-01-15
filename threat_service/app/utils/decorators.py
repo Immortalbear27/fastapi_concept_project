@@ -19,7 +19,7 @@ def timed(name: str | None = None):
         @functools.wraps(func)
         async def wrapper(*args: P.args, **kwargs: P.kwargs):
             st = time.time()
-            result = func(*args, **kwargs)
+            result = await func(*args, **kwargs)
             end = time.time()
             totalTime = end - st
             print("Total time for execution:", totalTime)
