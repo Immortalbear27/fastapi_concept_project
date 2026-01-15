@@ -1,6 +1,18 @@
 from fastapi import APIRouter, Depends, status
 from app.models.schemas import ThreatRequest, ThreatResponse
 from app.dependencies.auth import get_current_user
+from enum import Enum
+import asyncio
+
+# Defines suspicious words:
+class suspicious_keywords(Enum):
+    sus = ("sus", 0.8)
+    mid = ("mid", 0.6)
+    low = ("low", 0.4)
+    
+    def __init__(self, keyword: str, score: float):
+        self.keyword = keyword
+        self.score = score
 
 # Overarching process:
 # FastAPI conducts these processes when a HTTP request hits /threat/analyze:
@@ -40,7 +52,6 @@ router = APIRouter(
 # - Records the function reference, attaches metadata such as HTTP method, path,
 # input and output model, and status code
 
-# 
 async def analyse_threat(
     # The below line does this:
     # - Parses JSON
@@ -56,8 +67,7 @@ async def analyse_threat(
 ):
     """
     TODO:
-    - Accept a validated request body
-    - Simulate async threat analysis
+    - Simulate async I/O operation e.g. external call
     - Return a structured response
     
     Args:
@@ -65,9 +75,35 @@ async def analyse_threat(
         current_user (_type_, optional): _description_. Defaults to Depends(get_current_user).
     """
     
-    # Placeholder response:
+    # Simulating ASync processes:
+    await asyncio.sleep(0.2)
+    
+    # Analysing payload:
+    # Add the indicating words to the list of indicators in ThreatResponse:
+    scores = []
+    IndicatorList = []
+    for indicator in suspicious_keywords:
+        if indicator.keyword in request.payload_data:
+            IndicatorList.append(indicator.keyword)
+            scores.append(indicator.score)
+    
+    # Set the risk score:
+    if scores == []:
+        RiskScore = 0.0
+    else:
+        RiskScore = max(scores)
+    
+    # Set the classification label:
+    if RiskScore <= 0.3:
+        ClassLabel = "benign"
+    elif RiskScore <= 0.7 and RiskScore > 0.3:
+        ClassLabel = "suspicious"
+    elif RiskScore <=1.0 and RiskScore > 0.7:
+        ClassLabel = "malicious"
+        
+    # Return the response:
     return ThreatResponse(
-        risk_score = 0.0,
-        classification_label = "benign",
-        indicators = []
+        risk_score = RiskScore,
+        classification_label = ClassLabel,
+        indicators = IndicatorList
     )

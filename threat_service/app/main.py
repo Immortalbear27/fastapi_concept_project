@@ -1,10 +1,5 @@
 from fastapi import FastAPI
-from app.api.routes import router as threat_router
-
-# TODO:
-# - Instantiate the FastAPI application
-# Include the API router
-# Add a simple startup event (print/log something)
+from app.api.router import router as threat_router
 
 app = FastAPI(
     title = "Threat Analysis Service",
@@ -21,5 +16,3 @@ app.include_router(threat_router)
 @app.on_event("startup")
 async def startup_event():
     print("Threat Analysis Service started")
-    # TODO: Simulate startup work
-    pass
