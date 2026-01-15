@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, status
 from app.models.schemas import ThreatRequest, ThreatResponse
 from app.dependencies.auth import get_current_user
-from app.analysis.threat_analysis import analyse_threat
+from app.analysis.threat_analysis import analyse_threat, cpu_intensive_fingerprint
+from concurrent.futures import ThreadPoolExecutor
 import asyncio
 
 # Overarching process:
@@ -12,6 +13,9 @@ import asyncio
 # - Reject the request if invalid
 # - Resolve dependencies
 # - Only after all this does it call analyze_threat(...)
+
+# Create thread pool for offloading CPU-bound work from the event loop:
+executor = ThreadPoolExecutor(max_workers = 4)
 
 # Allows for modular APIs, keeps routes separate from application bootstrapping,
 # and enables reuse and scaling.
@@ -53,7 +57,7 @@ async def analyse_threat_endpoint(
     # - 'Before calling this function, FastAPI must run 'get_current_user', and inject its result'
     # If this call raises an exception, then the function is never called, 
     # and FastAPI returns a HTTP error automatically
-    current_user = Depends(get_current_user),
+    user = Depends(get_current_user),
 ):
     """
     
@@ -65,5 +69,18 @@ async def analyse_threat_endpoint(
     # Simulating ASync processes:
     await asyncio.sleep(0.2)
     
-    # Analyses payload and then returns the associated threat assessment structure:
-    return analyse_threat(request.payload_data)
+    # Adding CPU-intensive fingerprint, for testing purposes:
+    loop = asyncio.get_running_loop()
+    fingerprint = await loop.run_in_executor(
+        executor,
+        cpu_intensive_fingerprint,
+        request.payload_data,
+    )
+    
+    # Just for testing purposes:
+    response = analyse_threat(request.payload_data)
+    response.indicators.append(f"fingerprint:{fingerprint[:12]}")
+    return response
+    
+    # # Analyses payload and then returns the associated threat assessment structure:
+    # return analyse_threat(request.payload_data)
