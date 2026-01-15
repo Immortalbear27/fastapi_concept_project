@@ -12,9 +12,9 @@ class SuspiciousKeywords(Enum):
         Enum (_type_): Enum argument, no more to say
     """
     # Setting the suspicious words and their respective risk scores:
-    powershell = ("powershell", 0.9),
-    sus = ("sus", 0.6),
-    tester = ("tester", 0.2),
+    powershell = ("powershell", 0.9)
+    sus = ("sus", 0.6)
+    tester = ("tester", 0.2)
     other = ("other", 0.1)
     
     # Used for later access to the keywords and values in the Enum:
@@ -57,11 +57,11 @@ def classify_risk(risk_score: float) -> str:
     """
     # Determine the level of risk, and assign the appropriate label:
     if risk_score <= 0.3:
-        return "benign"
+        return ThreatVerdict.benign
     elif risk_score <= 0.7 and risk_score > 0.3:
-        return "suspicious"
+        return ThreatVerdict.suspicious
     elif risk_score <= 1.0 and risk_score > 0.7:
-        return "malicious"
+        return ThreatVerdict.malicious
     else:
         # This shouldn't trigger. Ever. If it somehow does, you'll know where from:
         raise Exception ("How in the hell did you trigger this...")
@@ -82,7 +82,7 @@ def analyse_threat(payload_data: str):
     # Obtain lists of indicators and scores:
     IndicatorList, ScoreList = analyse_payload(payload_data)
     # Get highest risk rating:
-    MaxRiskScore = max(ScoreList)
+    MaxRiskScore = max(ScoreList) if ScoreList else 0.0
     # Get the classification label:
     ClassLabel = classify_risk(MaxRiskScore)
     return ThreatResponse(

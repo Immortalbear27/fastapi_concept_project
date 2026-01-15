@@ -1,18 +1,8 @@
 from fastapi import APIRouter, Depends, status
 from app.models.schemas import ThreatRequest, ThreatResponse
 from app.dependencies.auth import get_current_user
-from enum import Enum
+from app.analysis.threat_analysis import analyse_threat
 import asyncio
-
-# Defines suspicious words:
-class suspicious_keywords(Enum):
-    sus = ("sus", 0.8)
-    mid = ("mid", 0.6)
-    low = ("low", 0.4)
-    
-    def __init__(self, keyword: str, score: float):
-        self.keyword = keyword
-        self.score = score
 
 # Overarching process:
 # FastAPI conducts these processes when a HTTP request hits /threat/analyze:
@@ -52,7 +42,7 @@ router = APIRouter(
 # - Records the function reference, attaches metadata such as HTTP method, path,
 # input and output model, and status code
 
-async def analyse_threat(
+async def analyse_threat_endpoint(
     # The below line does this:
     # - Parses JSON
     # - Validates it against the schema
@@ -66,44 +56,14 @@ async def analyse_threat(
     current_user = Depends(get_current_user),
 ):
     """
-    TODO:
-    - Simulate async I/O operation e.g. external call
-    - Return a structured response
     
     Args:
-        request (ThreatRequest): _description_
-        current_user (_type_, optional): _description_. Defaults to Depends(get_current_user).
+        request (ThreatRequest): The user request to the server.
+        current_user: Defaults to Depends(get_current_user).
     """
     
     # Simulating ASync processes:
     await asyncio.sleep(0.2)
     
-    # Analysing payload:
-    # Add the indicating words to the list of indicators in ThreatResponse:
-    scores = []
-    IndicatorList = []
-    for indicator in suspicious_keywords:
-        if indicator.keyword in request.payload_data:
-            IndicatorList.append(indicator.keyword)
-            scores.append(indicator.score)
-    
-    # Set the risk score:
-    if scores == []:
-        RiskScore = 0.0
-    else:
-        RiskScore = max(scores)
-    
-    # Set the classification label:
-    if RiskScore <= 0.3:
-        ClassLabel = "benign"
-    elif RiskScore <= 0.7 and RiskScore > 0.3:
-        ClassLabel = "suspicious"
-    elif RiskScore <=1.0 and RiskScore > 0.7:
-        ClassLabel = "malicious"
-        
-    # Return the response:
-    return ThreatResponse(
-        risk_score = RiskScore,
-        classification_label = ClassLabel,
-        indicators = IndicatorList
-    )
+    # Analyses payload and then returns the associated threat assessment structure:
+    return analyse_threat(request.payload_data)
