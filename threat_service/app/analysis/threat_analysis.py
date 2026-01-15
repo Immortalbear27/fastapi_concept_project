@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import List, Tuple
+import hashlib
 
 from app.models.schemas import ThreatResponse, ThreatVerdict
 
@@ -66,6 +67,22 @@ def classify_risk(risk_score: float) -> str:
         # This shouldn't trigger. Ever. If it somehow does, you'll know where from:
         raise Exception ("How in the hell did you trigger this...")
     
+def cpu_intensive_fingerprint(payload: str, rounds: int = 50000):
+    """
+    Deliberately CPU-intensive function, in order to test functionality of CPU threading
+
+    Args:
+        payload (str): Data contained within the network traffic package
+        rounds (int, optional): Number of rounds when hashing something. Defaults to 50000.
+
+    Returns:
+        _type_: A severely hashed version of the original payload data.
+    """
+    encoded = payload.encode("utf-8")
+    for i in range(rounds):
+        encoded = hashlib.sha512(encoded).digest()
+    return encoded.hex()
+
 def analyse_threat(payload_data: str):
     """
     Analyses the threat and returns the collated data regarding the payload.
